@@ -1,0 +1,138 @@
+/* IRON MERIDIAN HUD identity, ported from reference/iron-meridian.html.
+   Dark graphite command HUD, brass accents, blue vs red factions. The full HUD (ticket
+   tug bar, objective pips, roster cards, event log) is built out in M3; this establishes
+   the palette and shell now so the visual identity is locked in from the start. */
+
+:root {
+  --bg: #0b0f12;
+  --panel: rgba(13, 18, 22, 0.92);
+  --line: #2a3540;
+  --ink: #dce6ec;
+  --dim: #7d8b96;
+  --brass: #e8b84b;
+  --brass-dim: #8a6f2e;
+  --blu: #4da3ff;
+  --blu-hi: #8ec7ff;
+  --red: #ff5f4e;
+  --red-hi: #ff9c8f;
+  --ok: #7fd45f;
+  --warn: #ffd257;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  font-family: ui-sans-serif, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+}
+
+canvas#game {
+  position: absolute;
+  inset: 0;
+  display: block;
+  cursor: crosshair;
+}
+
+.lbl {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  font-weight: 600;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Top command bar (brand + status readout). */
+#topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 58px;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(180deg, rgba(8, 11, 14, 0.95), rgba(8, 11, 14, 0.72) 78%, transparent);
+  pointer-events: none;
+  z-index: 20;
+}
+
+#brand {
+  padding: 9px 0 0 16px;
+}
+
+#brand h1 {
+  font-size: 17px;
+  letter-spacing: 0.3em;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+#brand h1 b {
+  color: var(--brass);
+}
+
+#brand .lbl {
+  letter-spacing: 0.14em;
+  color: #5b6a75;
+}
+
+/* M0 connection panel: proves the client <-> server round trip. */
+#status {
+  position: absolute;
+  top: 66px;
+  left: 12px;
+  z-index: 20;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--brass);
+  padding: 12px 16px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.9;
+  min-width: 260px;
+}
+
+#status .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+#status .k {
+  color: var(--dim);
+  letter-spacing: 0.08em;
+}
+
+#status .v {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+#status .v.brass {
+  color: var(--brass);
+}
+
+#status #conn.online {
+  color: var(--ok);
+}
+
+#status #conn.offline {
+  color: var(--red);
+}

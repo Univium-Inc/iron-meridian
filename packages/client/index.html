@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IRON MERIDIAN</title>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="topbar">
+      <div id="brand">
+        <h1>IRON <b>MERIDIAN</b></h1>
+        <div class="lbl">combined arms operational command</div>
+      </div>
+    </div>
+
+    <div id="status">
+      <div class="row"><span class="k">link</span><span class="v" id="conn">connecting</span></div>
+      <div class="row"><span class="k">tick</span><span class="v" id="tick">0</span></div>
+      <div class="row"><span class="k">entities</span><span class="v" id="movers">0</span></div>
+      <div class="row"><span class="k">state hash</span><span class="v brass" id="hash">--</span></div>
+      <div class="row"><span class="k">server tick avg</span><span class="v" id="tickms">--</span></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

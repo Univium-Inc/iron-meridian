@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# vite
+.vite/
+packages/client/dist/
+
+# test
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editor / os
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# env
+.env
+.env.local
+
+# scratch
+*.local

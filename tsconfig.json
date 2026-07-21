@@ -1,0 +1,9 @@
+{
+  "comment": "Root config for editors. Each package is typechecked on its own via its tsconfig (pnpm -r run typecheck). We do not use tsc build mode because @iron/shared is consumed from source by Vite, tsx, and tsup.",
+  "files": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/server" },
+    { "path": "./packages/client" }
+  ]
+}

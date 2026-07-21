@@ -1,0 +1,29 @@
+{
+  "name": "iron-meridian",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IRON MERIDIAN: a 2D top-down combined-arms RTS with authoritative online multiplayer",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @iron/server --filter @iron/client run dev",
+    "build": "pnpm --filter @iron/shared run build && pnpm --filter @iron/client run build && pnpm --filter @iron/server run build",
+    "start": "node packages/server/dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm -r run typecheck",
+    "clean": "rm -rf packages/*/dist packages/*/*.tsbuildinfo coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
