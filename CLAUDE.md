@@ -12,8 +12,10 @@ is the source of the visual identity and the combat model to port and retune).
 
 ## Current status
 
-- Milestone: **M0 (Scaffold) complete.** Next: M1 (World).
-- All tests green (9 tests). `pnpm dev`, `pnpm build`, `pnpm typecheck` all working.
+- Milestone: **M1 (World) complete.** Next: M2 (Combat core).
+- All tests green (22 tests). `pnpm dev`, `pnpm build`, `pnpm typecheck` all working.
+- Pathfinding budget met with margin: 2000 random Large routes averaged 0.39ms, max
+  2.65ms (well under the 10ms/route requirement). No unreachable land tiles on any size.
 
 Milestone map (do not advance until the current one's acceptance criteria pass and all
 tests are green):
@@ -21,7 +23,7 @@ tests are green):
 - M0 Scaffold: monorepo, TS, Vite, vitest, ws, shared sim skeleton, fixed tick, seeded
   RNG, determinism hash test. DONE.
 - M1 World: map gen (3 sizes) with rivers, roads, towns, forests, elevation, objectives,
-  cover points; hierarchical A*, flow fields, spatial hash.
+  cover points; hierarchical A*, flow fields, spatial hash. DONE.
 - M2 Combat core: vehicles, 5-man squads, cover micro, physical projectiles, suppression,
   morale and routs, stamina, dodging, smoke, facing armor, hull-down, elevation LOS, fog;
   balance harness v1.
@@ -75,6 +77,32 @@ Key files:
 - `packages/shared/src/sim/hash.ts`: FNV-1a over network-quantized state.
 - `packages/shared/src/config/`: every tunable number, with comments. No magic numbers in
   logic files.
+
+### World and pathfinding (M1)
+
+Map generation is deterministic from `(seed, size)`: `generateMap` uses its own RNG so
+layout is stable regardless of runtime randomness. Pipeline: elevation (plateaus and
+ridges), meandering rivers, bridges and a road network, town clusters, forests,
+objectives and named sectors, cover-point extraction, then a connectivity-repair pass
+that carves a causeway for any land pocket generation left isolated. This guarantees the
+"no unreachable land tiles" invariant (water is the only impassable terrain).
+
+Pathfinding is hierarchical: a coarse sector graph (16-tile blocks) is precomputed per
+map; each query runs a coarse A* to get a corridor, then a grid A* refines inside that
+corridor only, falling back to unconstrained grid A* if the corridor is too tight. All
+buffers are allocated once per map and reset with a generation stamp, so a search costs
+time proportional to the tiles it explores, not the map size. Flow fields (Dijkstra
+integration from a goal) serve large group moves so N units share one field. A uniform
+spatial hash backs all proximity queries (no O(n^2) loops).
+
+Key files:
+
+- `packages/shared/src/config/map.ts`: sizes, tile types, elevation, movement tables.
+- `packages/shared/src/sim/map/mapgen.ts`: deterministic generation + connectivity repair.
+- `packages/shared/src/sim/map/types.ts`: `GameMap`, objectives, sectors, cover points.
+- `packages/shared/src/sim/pathfinding/pathfinder.ts`: hierarchical corridor A*.
+- `packages/shared/src/sim/pathfinding/flowfield.ts`: flow fields for group moves.
+- `packages/shared/src/sim/spatial/hash.ts`: uniform-grid spatial hash.
 
 ## Conventions
 

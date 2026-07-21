@@ -17,7 +17,7 @@ function scriptedLog(): TimedCommand[] {
 
 // Run a sim for `ticks` steps, applying the command log at the correct ticks.
 function runWithLog(seed: number, ticks: number, log: TimedCommand[]): number {
-  const sim = new Simulation(seed);
+  const sim = new Simulation(seed, "small");
   let li = 0;
   for (let t = 0; t < ticks; t++) {
     while (li < log.length && log[li]!.tick === sim.world.tick) {
@@ -59,10 +59,10 @@ describe("determinism", () => {
 
   it("the hash is stable step by step (tick, run(n)) equivalence)", () => {
     // Ticking one at a time must match ticking in a batch.
-    const oneByOne = new Simulation(SEED);
+    const oneByOne = new Simulation(SEED, "small");
     for (let i = 0; i < 500; i++) oneByOne.tick();
 
-    const batched = new Simulation(SEED);
+    const batched = new Simulation(SEED, "small");
     batched.run(500);
 
     expect(oneByOne.hash()).toBe(batched.hash());

@@ -1,22 +1,14 @@
-// IRON MERIDIAN client entry (M0).
+// IRON MERIDIAN client entry (M1).
 //
-// Two things are proven here:
-//   1. @iron/shared (the entire simulation) runs unchanged in the browser. We spin up a
-//      local Simulation and render its wandering movers to a Canvas 2D context. The same
-//      TypeScript executes on the Node server.
-//   2. The client <-> server WebSocket round trip works: the status panel shows the
-//      authoritative server tick, state hash, and tick timing pushed over /ws.
-//
-// The real renderer, HUD, input, and interpolation land in M3 and M5. This is a shell.
+// Runs the shared simulation locally (proving @iron/shared is isomorphic) on the real
+// generated map, and renders a fitted overview: baked terrain, objectives with sector
+// labels, and the path-following movers. The status panel still reflects the
+// authoritative server tick, state hash, and tick timing over the WebSocket. The full
+// camera-driven renderer and HUD arrive in M3.
 
 import "./style.css";
-import {
-  DEFAULT_SEED,
-  SCAFFOLD_WORLD_H,
-  SCAFFOLD_WORLD_W,
-  Simulation,
-  TICK_MS,
-} from "@iron/shared";
+import { DEFAULT_SEED, Simulation, TICK_MS, type GameMap } from "@iron/shared";
+import { bakeTerrain, type BakedTerrain } from "./terrain";
 
 // ---- DOM ----
 const canvas = document.getElementById("game") as HTMLCanvasElement;
@@ -44,11 +36,13 @@ function resize(): void {
 window.addEventListener("resize", resize);
 resize();
 
-// ---- local simulation (visual proof that the shared sim runs in the browser) ----
-const sim = new Simulation(DEFAULT_SEED);
+// ---- local simulation on the real map ----
+const sim = new Simulation(DEFAULT_SEED, "large");
+const map: GameMap = sim.world.map;
+const baked: BakedTerrain = bakeTerrain(map);
+
 let lastMs = performance.now();
 let accumulatorMs = 0;
-
 function stepSim(now: number): void {
   accumulatorMs += now - lastMs;
   lastMs = now;
@@ -60,41 +54,66 @@ function stepSim(now: number): void {
   }
 }
 
-// ---- render ----
+// Fit the whole map into the viewport (overview). Returns the transform.
+function fit(): { scale: number; ox: number; oy: number } {
+  const margin = 70;
+  const scale = Math.min(
+    (viewW - margin * 2) / map.worldW,
+    (viewH - margin * 2) / map.worldH,
+  );
+  const ox = (viewW - map.worldW * scale) / 2;
+  const oy = (viewH - map.worldH * scale) / 2;
+  return { scale, ox, oy };
+}
+
 function render(): void {
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
   g.fillStyle = "#06090c";
   g.fillRect(0, 0, viewW, viewH);
 
-  // Fit the scaffold world into the viewport with a margin.
-  const margin = 80;
-  const scale = Math.min(
-    (viewW - margin * 2) / SCAFFOLD_WORLD_W,
-    (viewH - margin * 2) / SCAFFOLD_WORLD_H,
-  );
-  const ox = (viewW - SCAFFOLD_WORLD_W * scale) / 2;
-  const oy = (viewH - SCAFFOLD_WORLD_H * scale) / 2;
+  const { scale, ox, oy } = fit();
 
-  // World bounds frame.
-  g.strokeStyle = "#2a3540";
-  g.lineWidth = 1;
-  g.strokeRect(ox, oy, SCAFFOLD_WORLD_W * scale, SCAFFOLD_WORLD_H * scale);
+  // Baked terrain, scaled to fit.
+  g.imageSmoothingEnabled = false;
+  g.drawImage(baked.canvas, ox, oy, map.worldW * scale, map.worldH * scale);
 
-  // Movers as brass silhouettes with a heading tick.
+  // Objectives: brass diamonds with name and sector.
+  g.textAlign = "center";
+  for (const o of map.objectives) {
+    const x = ox + o.x * scale;
+    const y = oy + o.y * scale;
+    g.save();
+    g.translate(x, y);
+    g.strokeStyle = "rgba(232,184,75,0.7)";
+    g.setLineDash([4, 4]);
+    g.beginPath();
+    g.arc(0, 0, o.r * scale, 0, Math.PI * 2);
+    g.stroke();
+    g.setLineDash([]);
+    g.rotate(Math.PI / 4);
+    g.fillStyle = "#e8b84b";
+    g.fillRect(-4, -4, 8, 8);
+    g.restore();
+    g.fillStyle = "#dce6ec";
+    g.font = "bold 10px ui-sans-serif";
+    g.fillText(o.name, x, y - 8);
+  }
+
+  // Movers: brass dots with a heading tick.
   for (const m of sim.world.movers) {
     const x = ox + m.x * scale;
     const y = oy + m.y * scale;
     g.save();
     g.translate(x, y);
     g.rotate(m.heading);
-    g.fillStyle = "#e8b84b";
+    g.fillStyle = m.inf ? "#8ec7ff" : "#ffd257";
     g.beginPath();
-    g.arc(0, 0, 3.5, 0, Math.PI * 2);
+    g.arc(0, 0, 3, 0, Math.PI * 2);
     g.fill();
-    g.strokeStyle = "rgba(232,184,75,0.5)";
+    g.strokeStyle = "rgba(255,255,255,0.4)";
     g.beginPath();
     g.moveTo(0, 0);
-    g.lineTo(10, 0);
+    g.lineTo(8, 0);
     g.stroke();
     g.restore();
   }
@@ -121,7 +140,6 @@ interface RoomStatus {
 function connect(): void {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${proto}://${location.host}/ws`);
-
   ws.addEventListener("open", () => {
     el.conn.textContent = "online";
     el.conn.className = "v online";
@@ -129,7 +147,6 @@ function connect(): void {
   ws.addEventListener("close", () => {
     el.conn.textContent = "offline";
     el.conn.className = "v offline";
-    // Retry after a short delay so the panel recovers when the dev server restarts.
     setTimeout(connect, 1000);
   });
   ws.addEventListener("error", () => ws.close());
