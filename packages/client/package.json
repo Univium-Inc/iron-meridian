@@ -1,0 +1,19 @@
+{
+  "name": "@iron/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "IRON MERIDIAN client: Vite, Canvas 2D renderer.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@iron/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^6.0.7"
+  }
+}
